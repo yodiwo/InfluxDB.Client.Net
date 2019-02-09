@@ -225,15 +225,26 @@ namespace AdysTech.InfluxDB.Client.Net
                        || response.StatusCode == HttpStatusCode.Forbidden
                        || response.StatusCode == HttpStatusCode.ProxyAuthenticationRequired
                        || (int)response.StatusCode == 511) //511 NetworkAuthenticationRequired
+            {
                 throw new UnauthorizedAccessException("InfluxDB needs authentication. Check uname, pwd parameters");
             else if (response.StatusCode == HttpStatusCode.BadGateway || response.StatusCode == HttpStatusCode.GatewayTimeout)
             {
                 throw new ServiceUnavailableException(await response.Content.ReadAsStringAsync());
             }
             //if(response.StatusCode==HttpStatusCode.NotFound)
-            else if (response.StatusCode == HttpStatusCode.BadRequest)
+            else if (response.StatusCode == HttpStatusCode.BadRequest||
+                     response.StatusCode == HttpStatusCode.InternalServerError)
             {
                 var content = await response.Content.ReadAsStringAsync();
+
+                content = content.Trim();
+
+                if (content.StartsWith("{") && content.EndsWith("}"))
+                {
+                    var err = (string)Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(content)?.error;
+                    throw new Exception(err);
+                }
+
                 //regex assumes error text from https://github.com/influxdata/influxdb/blob/master/models/points.go ParsePointsWithPrecision
                 //fmt.Sprintf("'%s': %v", string(block[start:len(block)])
                 List<string> parts = null; string l = "";
@@ -274,6 +285,10 @@ namespace AdysTech.InfluxDB.Client.Net
                     throw InfluxDBException.ProcessInfluxDBError(content);
                 }
             }
+            else if (response.StatusCode == HttpStatusCode.BadGateway)
+                throw new HttpRequestException();
+            else if (response.StatusCode == HttpStatusCode.GatewayTimeout)
+                throw new TimeoutException();
             else if (response.StatusCode == HttpStatusCode.NoContent)
                 return true;
             else
@@ -759,7 +774,7 @@ namespace AdysTech.InfluxDB.Client.Net
                 else if (response.StatusCode == HttpStatusCode.BadGateway || response.StatusCode == HttpStatusCode.GatewayTimeout)
                 {
                     throw new ServiceUnavailableException(await response.Content.ReadAsStringAsync());
-                }
+            }
                 else if (response.StatusCode == HttpStatusCode.BadRequest)
                 {
                     throw InfluxDBException.ProcessInfluxDBError(await response.Content.ReadAsStringAsync());
