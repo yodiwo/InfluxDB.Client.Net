@@ -866,15 +866,16 @@ namespace AdysTech.InfluxDB.Client.Net
                 var rawResult = JsonConvert.DeserializeObject<InfluxResponse>(await response.Content.ReadAsStringAsync());
                 var partialResult = rawResult.Results?.Any(r => r.Partial == true);
 
-                if (rawResult?.Results?.Count > 1)
-                    throw new ArgumentException("The query is resulting in a format, which is not supported by this method yet");
-
-                if (rawResult?.Results[0]?.Series != null)
+                if (rawResult?.Results?.Count > 0)
                 {
-                    foreach (var series in rawResult?.Results[0]?.Series)
+                    foreach (var _results in rawResult.Results)
                     {
-                        InfluxSeries result = GetInfluxSeries(precision, series, partialResult);
-                        results.Add(result);
+                        if (_results?.Series?.Count > 0)
+                            foreach (var series in _results.Series)
+                            {
+                                InfluxSeries result = GetInfluxSeries(precision, series, partialResult);
+                                results.Add(result);
+                            }
                     }
                 }
                 return results;
@@ -995,7 +996,7 @@ namespace AdysTech.InfluxDB.Client.Net
         /// <param name="partialResult"></param>
         /// <param name="SafePropertyNames">If true the first letter of each property name will be Capital, making them safer to use in C#</param>
         /// <returns></returns>
-        private static InfluxSeries GetInfluxSeries(TimePrecision precision, Series series, bool? partialResult, 
+        private static InfluxSeries GetInfluxSeries(TimePrecision precision, Series series, bool? partialResult,
             bool SafePropertyNames = true)
         {
             var result = new InfluxSeries()
@@ -1149,7 +1150,7 @@ namespace AdysTech.InfluxDB.Client.Net
             var query = (im as InfluxMeasurement).GetDropSyntax();
             if (query != null)
             {
-                var endPoint = new Dictionary<string, string>() { { "db", db.Name },{ "q", query } };
+                var endPoint = new Dictionary<string, string>() { { "db", db.Name }, { "q", query } };
                 if (rp != null)
                 {
                     endPoint.Add("rp", rp.Name);
@@ -1191,7 +1192,7 @@ namespace AdysTech.InfluxDB.Client.Net
                 if (response.StatusCode == HttpStatusCode.OK)
                 {
                     var content = await response.Content.ReadAsStringAsync();
-                    if(content.Contains("error"))
+                    if (content.Contains("error"))
                     {
                         throw new InfluxDBException("Delete Failed", new Regex(@"\""error\"":\""(.*?)\""").Match(content).Groups[1].Value);
                     }
