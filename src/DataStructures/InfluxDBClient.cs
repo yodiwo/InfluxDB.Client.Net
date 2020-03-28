@@ -851,12 +851,18 @@ namespace AdysTech.InfluxDB.Client.Net
         /// <seealso cref="InfluxSeries"/>
         public async Task<List<IInfluxSeries>> QueryMultiSeriesAsync(string dbName, string measurementQuery, string retentionPolicy = null, TimePrecision precision = TimePrecision.Nanoseconds)
         {
-            var endPoint = new Dictionary<string, string>() { { "db", dbName }, { "q", measurementQuery }, { "epoch", precisionLiterals[(int)precision] } };
+            var endPoint = new Dictionary<string, string>()
+            {
+                { "db", dbName },
+                { "q", measurementQuery },
+                { "epoch", precisionLiterals[(int)precision] }
+            };
 
             if (retentionPolicy != null)
             {
                 endPoint.Add("rp", retentionPolicy);
             }
+
             var response = await GetAsync(endPoint, HttpCompletionOption.ResponseHeadersRead);
 
             if (response == null) throw new ServiceUnavailableException();
@@ -864,18 +870,20 @@ namespace AdysTech.InfluxDB.Client.Net
             {
                 var results = new List<IInfluxSeries>();
                 var rawResult = JsonConvert.DeserializeObject<InfluxResponse>(await response.Content.ReadAsStringAsync());
-                var partialResult = rawResult.Results?.Any(r => r.Partial == true);
+                var partialResult = rawResult?.Results?.Any(r => r.Partial == true);
 
                 if (rawResult?.Results?.Count > 0)
                 {
-                    foreach (var _results in rawResult.Results)
+                    foreach (var _res in rawResult.Results)
                     {
-                        if (_results?.Series?.Count > 0)
-                            foreach (var series in _results.Series)
+                        if (_res.Series?.Count > 0)
+                        {
+                            foreach (var series in _res.Series)
                             {
                                 InfluxSeries result = GetInfluxSeries(precision, series, partialResult);
                                 results.Add(result);
                             }
+                        }
                     }
                 }
                 return results;
@@ -886,7 +894,7 @@ namespace AdysTech.InfluxDB.Client.Net
         /// <summary>
         /// Queries Influx DB and gets a time series data back. Ideal for fetching measurement values.
         /// The return list is of InfluxSeries, and each element in there will have properties named after columns in series
-        /// THis uses Chunking support from InfluxDB. It returns results in streamed batches rather than as a single response
+        /// This uses Chunking support from InfluxDB. It returns results in streamed batches rather than as a single response
         /// Responses will be chunked by series or by every ChunkSize points, whichever occurs first.
         /// </summary>
         /// <param name="dbName">Name of the database</param>
@@ -897,16 +905,20 @@ namespace AdysTech.InfluxDB.Client.Net
         /// <seealso cref="InfluxSeries"/>
         public async Task<List<IInfluxSeries>> QueryMultiSeriesAsync(string dbName, string measurementQuery, int ChunkSize, string retentionPolicy = null, TimePrecision precision = TimePrecision.Nanoseconds)
         {
-            var endPoint = new Dictionary<string, string>() {
+            var endPoint = new Dictionary<string, string>()
+            {
                 { "db", dbName },
                 { "q", measurementQuery },
-                {"chunked", "true" },
-                {"chunk_size", ChunkSize.ToString() },
-                { "epoch", precisionLiterals[(int)precision] } };
+                { "chunked", "true" },
+                { "chunk_size", ChunkSize.ToString() },
+                { "epoch", precisionLiterals[(int)precision] }
+            };
+
             if (retentionPolicy != null)
             {
                 endPoint.Add("rp", retentionPolicy);
             }
+
             var response = await GetAsync(endPoint, HttpCompletionOption.ResponseHeadersRead);
             if (response == null) throw new ServiceUnavailableException();
             if (response.StatusCode == HttpStatusCode.OK)
@@ -922,15 +934,24 @@ namespace AdysTech.InfluxDB.Client.Net
                         var str = await reader.ReadLineAsync();
                         var rawResult = JsonConvert.DeserializeObject<InfluxResponse>(str);
                         var partialResult = rawResult?.Results?.Any(r => r.Partial == true);
-                        if (rawResult?.Results[0]?.Series != null)
+
+                        if (rawResult?.Results?.Count > 0)
                         {
-                            foreach (var series in rawResult?.Results[0]?.Series)
+                            foreach (var _res in rawResult.Results)
                             {
-                                InfluxSeries result = GetInfluxSeries(precision, series, partialResult);
-                                results.Add(result);
+                                if (_res.Series?.Count > 0)
+                                {
+                                    foreach (var series in _res.Series)
+                                    {
+                                        InfluxSeries result = GetInfluxSeries(precision, series, partialResult);
+                                        results.Add(result);
+                                    }
+                                }
+
+                                if (!_res.Partial)
+                                    break;
                             }
                         }
-                        if (!rawResult.Results[0].Partial) break;
                     } while (!reader.EndOfStream);
                 }
                 return results;
