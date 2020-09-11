@@ -51,6 +51,13 @@ namespace AdysTech.InfluxDB.Client.Net
                 // Convert datetime to UNIX long
                 return dtValue.ToEpoch(TimePrecision.Milliseconds).ToString();
             }
+            else if (Value is DateTimeOffset dtValue2)
+            {
+                // Unix nanosecond timestamp. Specify alternative precisions with the HTTP API. The minimum valid timestamp is -9223372036854775806 or 1677-09-21T00:12:43.145224194Z. The maximum valid timestamp is 9223372036854775806 or 2262-04-11T23:47:16.854775806Z.
+                // InfluxDb does not support a datetime type for fields or tags
+                // Convert datetime to UNIX long
+                return dtValue2.UtcDateTime.ToEpoch(TimePrecision.Milliseconds).ToString();
+            }
             else if (Value is TimeSpan tsValue)
             {
                 return $"{tsValue.TotalMilliseconds}i";

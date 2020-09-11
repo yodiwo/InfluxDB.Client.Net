@@ -849,13 +849,12 @@ namespace AdysTech.InfluxDB.Client.Net
         /// <param name="precision">epoch precision of the data set</param>
         /// <returns>List of InfluxSeries</returns>
         /// <seealso cref="InfluxSeries"/>
-        public async Task<List<IInfluxSeries>> QueryMultiSeriesAsync(string dbName, string measurementQuery, string retentionPolicy = null, TimePrecision precision = TimePrecision.Nanoseconds)
+        public async Task<List<IInfluxSeries>> QueryMultiSeriesAsync(string dbName, string measurementQuery, string retentionPolicy = null)
         {
             var endPoint = new Dictionary<string, string>()
             {
                 { "db", dbName },
                 { "q", measurementQuery },
-                { "epoch", precisionLiterals[(int)precision] }
             };
 
             if (retentionPolicy != null)
@@ -880,7 +879,7 @@ namespace AdysTech.InfluxDB.Client.Net
                         {
                             foreach (var series in _res.Series)
                             {
-                                InfluxSeries result = GetInfluxSeries(precision, series, partialResult);
+                                InfluxSeries result = GetInfluxSeries(series, partialResult);
                                 results.Add(result);
                             }
                         }
@@ -903,7 +902,7 @@ namespace AdysTech.InfluxDB.Client.Net
         /// <param name="precision">epoch precision of the data set</param>
         /// <returns>List of InfluxSeries</returns>
         /// <seealso cref="InfluxSeries"/>
-        public async Task<List<IInfluxSeries>> QueryMultiSeriesAsync(string dbName, string measurementQuery, int ChunkSize, string retentionPolicy = null, TimePrecision precision = TimePrecision.Nanoseconds)
+        public async Task<List<IInfluxSeries>> QueryMultiSeriesAsync(string dbName, string measurementQuery, int ChunkSize, string retentionPolicy = null)
         {
             var endPoint = new Dictionary<string, string>()
             {
@@ -911,7 +910,6 @@ namespace AdysTech.InfluxDB.Client.Net
                 { "q", measurementQuery },
                 { "chunked", "true" },
                 { "chunk_size", ChunkSize.ToString() },
-                { "epoch", precisionLiterals[(int)precision] }
             };
 
             if (retentionPolicy != null)
@@ -943,7 +941,7 @@ namespace AdysTech.InfluxDB.Client.Net
                                 {
                                     foreach (var series in _res.Series)
                                     {
-                                        InfluxSeries result = GetInfluxSeries(precision, series, partialResult);
+                                        InfluxSeries result = GetInfluxSeries(series, partialResult);
                                         results.Add(result);
                                     }
                                 }
@@ -1017,7 +1015,7 @@ namespace AdysTech.InfluxDB.Client.Net
         /// <param name="partialResult"></param>
         /// <param name="SafePropertyNames">If true the first letter of each property name will be Capital, making them safer to use in C#</param>
         /// <returns></returns>
-        private static InfluxSeries GetInfluxSeries(TimePrecision precision, Series series, bool? partialResult,
+        private static InfluxSeries GetInfluxSeries(Series series, bool? partialResult,
             bool SafePropertyNames = true)
         {
             var result = new InfluxSeries()
@@ -1043,7 +1041,7 @@ namespace AdysTech.InfluxDB.Client.Net
                     else
                         header = series.Columns[col];
                     if (String.Equals(header, "Time", StringComparison.OrdinalIgnoreCase))
-                        ((IDictionary<string, object>)entry).Add(header, EpochHelper.FromEpoch(series.Values[row][col], precision));
+                        ((IDictionary<string, object>)entry).Add(header, EpochHelper.FromEpoch(series.Values[row][col]));
                     else
                         ((IDictionary<string, object>)entry).Add(header, series.Values[row][col]);
                 }

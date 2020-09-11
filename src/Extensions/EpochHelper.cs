@@ -25,21 +25,6 @@ namespace AdysTech.InfluxDB.Client.Net
             }
         }
 
-        public static DateTime FromEpoch(this string time, TimePrecision precision)
-        {
-            long duration = long.Parse(time);
-            DateTime t = Origin;
-            switch (precision)
-            {
-                case TimePrecision.Hours: return t.AddHours(duration);
-                case TimePrecision.Minutes: return t.AddMinutes(duration);
-                case TimePrecision.Seconds: return t.AddSeconds(duration);
-                case TimePrecision.Milliseconds: return t.AddMilliseconds(duration);
-                case TimePrecision.Microseconds: return t.AddTicks(duration * TimeSpan.TicksPerMillisecond * 1000);
-                case TimePrecision.Nanoseconds: return t.AddTicks(duration / 100); //1 tick = 100 nano sec
-            }
-            return t;
-        }
-
+        public static DateTimeOffset FromEpoch(this string time) => DateTimeOffset.Parse(time);
     }
 }
