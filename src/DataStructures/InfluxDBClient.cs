@@ -117,13 +117,13 @@ namespace AdysTech.InfluxDB.Client.Net
                 {
                     return response;
                 }
-                else if (response.StatusCode == HttpStatusCode.Unauthorized 
+                else if (response.StatusCode == HttpStatusCode.Unauthorized
                         || (response.StatusCode == HttpStatusCode.InternalServerError && response.ReasonPhrase == "INKApi Error")
-                        || response.StatusCode == HttpStatusCode.Forbidden 
+                        || response.StatusCode == HttpStatusCode.Forbidden
                         || response.StatusCode == HttpStatusCode.ProxyAuthenticationRequired
                         || (int)response.StatusCode == 511) //511 NetworkAuthenticationRequired
                     throw new UnauthorizedAccessException("InfluxDB needs authentication. Check uname, pwd parameters");
-                else if(response.StatusCode == HttpStatusCode.BadGateway || response.StatusCode == HttpStatusCode.GatewayTimeout)
+                else if (response.StatusCode == HttpStatusCode.BadGateway || response.StatusCode == HttpStatusCode.GatewayTimeout)
                 {
                     throw new ServiceUnavailableException(await response.Content.ReadAsStringAsync());
                 }
@@ -227,12 +227,12 @@ namespace AdysTech.InfluxDB.Client.Net
                        || (int)response.StatusCode == 511) //511 NetworkAuthenticationRequired
             {
                 throw new UnauthorizedAccessException("InfluxDB needs authentication. Check uname, pwd parameters");
+            }
             else if (response.StatusCode == HttpStatusCode.BadGateway || response.StatusCode == HttpStatusCode.GatewayTimeout)
             {
                 throw new ServiceUnavailableException(await response.Content.ReadAsStringAsync());
             }
-            //if(response.StatusCode==HttpStatusCode.NotFound)
-            else if (response.StatusCode == HttpStatusCode.BadRequest||
+            else if (response.StatusCode == HttpStatusCode.BadRequest ||
                      response.StatusCode == HttpStatusCode.InternalServerError)
             {
                 var content = await response.Content.ReadAsStringAsync();
@@ -329,8 +329,8 @@ namespace AdysTech.InfluxDB.Client.Net
                 .Where(prop => prop.IsDefined(typeof(InfluxDBRetentionPolicy), true))
                 .ToList();
             var retentionPolicy = retentionProp.Any()
-                ? retentionProp.First().GetValue(point, null) is IInfluxRetentionPolicy policy 
-                    ? policy 
+                ? retentionProp.First().GetValue(point, null) is IInfluxRetentionPolicy policy
+                    ? policy
                     : new InfluxRetentionPolicy
                     {
                         Name = retentionProp.First().GetValue(point, null) as string
@@ -692,7 +692,7 @@ namespace AdysTech.InfluxDB.Client.Net
         ///<exception cref="UnauthorizedAccessException">When Influx needs authentication, and no user name password is supplied or auth fails</exception>
         ///<exception cref="HttpRequestException">all other HTTP exceptions</exception>   
         ///<exception cref="CustomAttributeFormatException">When the provided object is missing required attributes</exception>   
-        public Task<bool> PostPointAsync<T>(string dbName, T point) 
+        public Task<bool> PostPointAsync<T>(string dbName, T point)
             => PostPointAsync(dbName, ToInfluxDataPoint(point));
 
         /// <summary>
@@ -774,7 +774,7 @@ namespace AdysTech.InfluxDB.Client.Net
                 else if (response.StatusCode == HttpStatusCode.BadGateway || response.StatusCode == HttpStatusCode.GatewayTimeout)
                 {
                     throw new ServiceUnavailableException(await response.Content.ReadAsStringAsync());
-            }
+                }
                 else if (response.StatusCode == HttpStatusCode.BadRequest)
                 {
                     throw InfluxDBException.ProcessInfluxDBError(await response.Content.ReadAsStringAsync());
@@ -966,8 +966,8 @@ namespace AdysTech.InfluxDB.Client.Net
         /// <param name="retentionPolicy">retention policy containing the measurement</param>
         /// <param name="precision">epoch precision of the data set</param>
         /// <returns>List of InfluxSeries<T></returns>
-        public async Task<List<IInfluxSeries<T>>> QueryMultiSeriesAsync<T>(string dbName, string measurementQuery, string retentionPolicy = null, TimePrecision precision = TimePrecision.Nanoseconds)
-            => (await QueryMultiSeriesAsync(dbName, measurementQuery, retentionPolicy, precision))
+        public async Task<List<IInfluxSeries<T>>> QueryMultiSeriesAsync<T>(string dbName, string measurementQuery, string retentionPolicy = null)
+            => (await QueryMultiSeriesAsync(dbName, measurementQuery, retentionPolicy))
                 .Select(series =>
                     new InfluxSeries<T>
                     {
@@ -993,8 +993,8 @@ namespace AdysTech.InfluxDB.Client.Net
         /// <returns>List of InfluxSeries<T></returns>
         /// <seealso cref="InfluxSeries"/>
 
-        public async Task<List<IInfluxSeries<T>>> QueryMultiSeriesAsync<T>(string dbName, string measurementQuery, int ChunkSize, string retentionPolicy = null, TimePrecision precision = TimePrecision.Nanoseconds)
-            => (await QueryMultiSeriesAsync(dbName, measurementQuery, ChunkSize, retentionPolicy, precision))
+        public async Task<List<IInfluxSeries<T>>> QueryMultiSeriesAsync<T>(string dbName, string measurementQuery, int ChunkSize, string retentionPolicy = null)
+            => (await QueryMultiSeriesAsync(dbName, measurementQuery, ChunkSize, retentionPolicy))
                 .Select(series =>
                     new InfluxSeries<T>
                     {

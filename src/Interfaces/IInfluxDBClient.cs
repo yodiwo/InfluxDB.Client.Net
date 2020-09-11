@@ -125,7 +125,7 @@ namespace AdysTech.InfluxDB.Client.Net
         /// <param name="retentionPolicy">retention policy containing the measurement</param>
         /// <param name="precision">epoch precision of the data set</param>
         /// <returns>List of InfluxSeries<T></returns>
-        Task<List<IInfluxSeries<T>>> QueryMultiSeriesAsync<T>(string dbName, string measurementQuery, string retentionPolicy = null, TimePrecision precision = TimePrecision.Nanoseconds);
+        Task<List<IInfluxSeries<T>>> QueryMultiSeriesAsync<T>(string dbName, string measurementQuery, string retentionPolicy = null);
 
 
         /// <summary>
@@ -158,7 +158,7 @@ namespace AdysTech.InfluxDB.Client.Net
         /// <returns>List of InfluxSeries<T></returns>
         /// <seealso cref="InfluxSeries"/>
 
-        Task<List<IInfluxSeries<T>>> QueryMultiSeriesAsync<T>(string dbName, string measurementQuery, int ChunkSize, string retentionPolicy = null, TimePrecision precision = TimePrecision.Nanoseconds);
+        Task<List<IInfluxSeries<T>>> QueryMultiSeriesAsync<T>(string dbName, string measurementQuery, int ChunkSize, string retentionPolicy = null);
 
 
         /// <summary>
