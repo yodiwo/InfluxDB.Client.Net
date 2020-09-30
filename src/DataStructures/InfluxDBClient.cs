@@ -122,12 +122,18 @@ namespace AdysTech.InfluxDB.Client.Net
                         || response.StatusCode == HttpStatusCode.Forbidden
                         || response.StatusCode == HttpStatusCode.ProxyAuthenticationRequired
                         || (int)response.StatusCode == 511) //511 NetworkAuthenticationRequired
+                {
                     throw new UnauthorizedAccessException("InfluxDB needs authentication. Check uname, pwd parameters");
+                }
                 else if (response.StatusCode == HttpStatusCode.BadGateway || response.StatusCode == HttpStatusCode.GatewayTimeout)
                 {
                     throw new ServiceUnavailableException(await response.Content.ReadAsStringAsync());
                 }
                 else if (response.StatusCode == HttpStatusCode.BadRequest)
+                {
+                    throw InfluxDBException.ProcessInfluxDBError(await response.Content.ReadAsStringAsync());
+                }
+                else if (response.StatusCode == HttpStatusCode.RequestUriTooLong)
                 {
                     throw InfluxDBException.ProcessInfluxDBError(await response.Content.ReadAsStringAsync());
                 }
